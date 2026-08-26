@@ -34,7 +34,7 @@ Static triage was performed inside an isolated Kali Linux virtual machine to dec
 * **Lure Mechanism:** Fake Adobe Acrobat Reader download portal serving `AdbRds_BckUp_SetUp.msi` (34.8 MB).
 
 ![Phishing Landing Page](assets/01-phishing-lure.png)
-![VirusTotal MSI Zero Detection](assets/02-virustotal-msi-zero-detection_2.png)
+![VirusTotal MSI Zero Detection](assets/02-virustotal-msi-zero-detection.png)
 
 ### Stage 2: MSI Deconstruction
 Using `7z` to unpack the compound installer without executing binaries:
@@ -48,7 +48,7 @@ cd extracted_msi
 7z x cab1.cab -o./cab_contents/
 ```
 
-![MSI and CAB Extraction](assets/03-msi-cab-extraction_2.png)
+![MSI and CAB Extraction](assets/03-msi-cab-extraction.png)
 
 ### Stage 3: Payload Configuration & Persistence
 Inspecting the extracted binary (`AgentExe` / `OpsBridgeAgent.exe`) revealed an embedded JSON configuration controlling C2 connectivity:
@@ -66,8 +66,8 @@ Inspecting the extracted binary (`AgentExe` / `OpsBridgeAgent.exe`) revealed an 
 * **Persistence:** `auto_persist: true` automatically registers a background service or scheduled task.
 * **Code Signing Evasion:** Signed with an EV certificate (`SSLcom-SubCA-EV-CodeSigning-RSA-4096-R3`), bypassing Windows SmartScreen and yielding a 0/63 detection rate on VirusTotal at delivery.
 
-![Extracted C2 JSON Configuration](assets/05-c2-json-extracted_2.png)
-![VirusTotal Payload Detection](assets/04-payload-virustotal-elastic_2.png)
+![Extracted C2 JSON Configuration](assets/05-c2-json-extracted.png)
+![VirusTotal Payload Detection](assets/04-payload-virustotal-elastic.png)
 
 ---
 
@@ -81,8 +81,8 @@ Inspecting the extracted binary (`AgentExe` / `OpsBridgeAgent.exe`) revealed an 
   * `upload.opsbridge.digital` (`163.245.221.212`): Staging server for exfiltrated data.
   * `opsbridge.digital`: Operator management console.
 
-![VirusTotal Domain Relations](assets/06-vt-infrastructure-relations_2.png)
-![RDAP Domain Intelligence](assets/07-rdap-dns-triage_2.png)
+![VirusTotal Domain Relations](assets/06-vt-infrastructure-relations.png)
+![RDAP Domain Intelligence](assets/07-rdap-dns-triage.png)
 ![DNS Resolution](assets/08-dns-resolution.png)
 
 ---
