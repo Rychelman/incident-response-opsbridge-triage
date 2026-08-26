@@ -1,45 +1,82 @@
-# Live Incident Response & Malware Triage: OpsBridge C2 Loader Campaign
+# Incident Response & Static Malware Analysis: OpsBridge C2 Campaign
 
-An end-to-end DFIR case study detailing the containment of an enterprise business email compromise (BEC) and static malware triage of an EV-signed Windows installer delivering the OpsBridge C2 agent.
+An end-to-end DFIR case study detailing the containment of an enterprise Microsoft 365 mailbox compromise and static malware analysis of an Extended Validation (EV) signed Windows installer delivering the OpsBridge C2 agent.
 
 ---
 
 ## Executive Summary
 
-An unauthorized login occurred on an enterprise Microsoft 365 mailbox originating from an external IP address. The threat actor established persistence via malicious inbox rules and distributed a zero-hour phishing blast to approximately 450 contacts. 
+An unauthorized login occurred on an enterprise Microsoft 365 mailbox originating from an external IP address. The threat actor created hidden inbox rules to conceal outgoing traffic and distributed a zero-hour phishing blast to approximately 450 contacts.
 
-Investigation of the payload revealed a multi-stage malware campaign deploying an EV-signed MSI installer delivering an evasive Command and Control (C2) agent linked to `opsbridge.digital`.
-
----
-
-## Incident Timeline & Triage
-
-1. **Unauthorized Access:** External login detected on the endpoint mailbox via session cookie theft or credential reuse.
-2. **Mailbox Manipulation:** Threat actor created a hidden inbox rule forwarding replies and bounce notifications directly to Deleted Items to mask malicious activity.
-3. **Phishing Blast:** 450 external vendors and contacts received a lure disguised as an urgent document update (`Grove Hill Doc2026.pdf`).
-4. **Remediation Executed:**
-   - Deleted malicious mailbox routing rules.
-   - Performed tenant-wide credential resets.
-   - Revoked all active session tokens (`Sign out everywhere`) to disconnect active sessions.
-   - Dispatched a liability-neutral security advisory to all impacted recipients.
+Triage of the distributed payload revealed an evasive multi-stage campaign delivering an EV-signed Windows Installer (MSI) configured to deploy a persistent Remote Access Trojan (RAT) connected to `opsbridge.digital`.
 
 ---
 
-## Static Malware Analysis
+## Incident Timeline & Mailbox Remediation
 
-Static triage was conducted in an isolated Kali Linux sandbox to analyze the payload without executing native Windows binaries.
+* **Initial Access:** Unauthorized web session established on the mailbox.
+* **Defense Evasion:** Threat actor created an inbox rule redirecting replies and delivery failures straight to Deleted Items.
+* **Phishing Blast:** 450 recipient addresses targeted across three batches with a fake PDF update notice.
+* **Containment Executed:**
+  * Deleted malicious inbox rules to restore normal mail flow.
+  * Reset account credentials.
+  * Revoked all active session tokens via Entra / M365 Admin (Sign out everywhere) to sever active remote sessions.
+  * Sent a liability-neutral advisory notice to all affected contacts.
 
-### Stage 1: Delivery & Lure
-- **Phishing URL:** Hosted on a compromised third-party WordPress installation (`littletonpc.org`).
-- **Lure Technique:** Fake Adobe Acrobat Reader landing page prompting the victim to download `AdbRds_BckUp_SetUp.msi` (34.8 MB) to view a blurred background document.
+---
 
-### Stage 2: MSI & CAB Deconstruction
-Using `7z` to unpack the compound archive structure without executing the installer:
+## Static Malware Analysis (Kali Linux Sandbox)
+
+Static triage was performed inside an isolated Kali Linux virtual machine to deconstruct the Windows binaries without dynamic execution risks.
+
+### Stage 1: Phishing Lure & Delivery
+* **Delivery Site:** Compromised WordPress installation (`littletonpc.org`).
+* **Lure Mechanism:** Fake Adobe Acrobat Reader download portal serving `AdbRds_BckUp_SetUp.msi` (34.8 MB).
+
+### Stage 2: MSI Deconstruction
+Using `7z` to unpack the compound installer without executing binaries:
 
 ```bash
-# Unpack MSI container
+# Unpack the outer MSI wrapper
 7z x AdbRds_BckUp_SetUp.msi -o./extracted_msi/
 
-# Extract internal cabinet file
+# Extract the internal cabinet payload
 cd extracted_msi
 7z x cab1.cab -o./cab_contents/
+```
+
+### Stage 3: Payload Configuration & Persistence
+Inspecting the extracted binary (`AgentExe` / `OpsBridgeAgent.exe`) revealed an embedded JSON configuration controlling C2 connectivity:
+
+```json
+{
+  "server_url": "[https://opsbridge.digital](https://opsbridge.digital)",
+  "enrollment_key": "e2b5d59c80f0a816b3d58728f9552898",
+  "auto_persist": true,
+  "auto_update": true
+}
+```
+
+* **Privilege Escalation:** Manifest enforces `requireAdministrator` to trigger Windows UAC elevation.
+* **Persistence:** `auto_persist: true` automatically registers a background service or scheduled task.
+* **Code Signing Evasion:** Signed with an EV certificate (`SSLcom-SubCA-EV-CodeSigning-RSA-4096-R3`), bypassing Windows SmartScreen and yielding a 0/63 detection rate on VirusTotal at delivery.
+
+---
+
+## Threat Intelligence & Infrastructure Mapping
+
+* **Domain Registration:** Registered through Namecheap (IANA 303) on February 2, 2026.
+* **CDN Masking:** Fronted by Cloudflare Anycast IP addresses (`104.21.80.181`, `172.67.153.26`).
+* **Unmasked Origin Server:** Historical passive DNS data identified an unproxied Linode / Akamai VPS at `69.164.245.216`.
+* **Subdomain Infrastructure:**
+  * `api.opsbridge.digital`: Agent beaconing and C2 communications.
+  * `upload.opsbridge.digital` (`163.245.221.212`): Staging server for exfiltrated data.
+  * `opsbridge.digital`: Operator management console.
+
+---
+
+## Detection Engineering & Takedown Actions
+
+* Reported malicious code-signing certificate serial numbers to SSL.com for revocation.
+* Submitted abuse and takedown reports to Cloudflare, Namecheap, and Linode.
+* Created custom YARA signatures to detect compiled OpsBridge binary strings.
