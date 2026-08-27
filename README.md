@@ -1,6 +1,15 @@
 # Incident Response & Static Malware Analysis: OpsBridge C2 Campaign
 
-An end-to-end DFIR case study detailing the containment of an enterprise Microsoft 365 mailbox compromise and static malware analysis of an Extended Validation (EV) signed Windows installer delivering the OpsBridge C2 agent.
+An end-to-end DFIR case study detailing the containment of an enterprise Microsoft 365 mailbox compromise, static malware analysis of an Extended Validation (EV) signed Windows installer delivering the OpsBridge C2 agent, and verified infrastructure takedown.
+
+---
+
+## Incident Status: Neutralized (C2 Infrastructure Taken Down)
+
+* **Initial Access & Phishing Blast:** Detected zero-hour compromise distributing malicious lures.
+* **Triage & Deconstruction:** Payload isolated, unpacked, and static configuration extracted.
+* **Abuse Escalation:** Reports submitted to Cloudflare Trust & Safety and hosting providers.
+* **Remediation Verified:** Origin backend server terminated by hosting provider (Report ID: `bc635a6346597e48`). Active C2 communications and exfiltration channels fully severed.
 
 ---
 
@@ -8,7 +17,7 @@ An end-to-end DFIR case study detailing the containment of an enterprise Microso
 
 An unauthorized login occurred on an enterprise Microsoft 365 mailbox originating from an external IP address. The threat actor created hidden inbox rules to conceal outgoing traffic and distributed a zero-hour phishing blast to approximately 450 contacts.
 
-Triage of the distributed payload revealed an evasive multi-stage campaign delivering an EV-signed Windows Installer (MSI) configured to deploy a persistent Remote Access Trojan (RAT) connected to `opsbridge.digital`.
+Triage of the distributed payload revealed an evasive multi-stage campaign delivering an EV-signed Windows Installer (MSI) configured to deploy a persistent Remote Access Trojan (RAT) connected to `opsbridge.digital`. Following rapid containment and technical escalation, the attacker's origin backend server was successfully identified and terminated.
 
 ---
 
@@ -22,6 +31,7 @@ Triage of the distributed payload revealed an evasive multi-stage campaign deliv
   * Reset account credentials.
   * Revoked all active session tokens via Entra / M365 Admin (Sign out everywhere) to sever active remote sessions.
   * Sent a liability-neutral advisory notice to all affected contacts.
+* **Infrastructure Takedown:** Abuse escalation resulted in the termination of the live C2 origin server.
 
 ---
 
@@ -87,8 +97,11 @@ Inspecting the extracted binary (`AgentExe` / `OpsBridgeAgent.exe`) revealed an 
 
 ---
 
-## Detection Engineering & Takedown Actions
+## Detection Engineering & Verified Takedown
 
-* Reported malicious code-signing certificate serial numbers to SSL.com for revocation.
-* Submitted abuse and takedown reports to Cloudflare, Namecheap, and Linode.
-* Created custom YARA signatures to detect compiled OpsBridge binary strings.
+* **Certificate Revocation:** Reported malicious code-signing certificate serial numbers to SSL.com for revocation.
+* **Abuse Escalation:** Submitted abuse packages and unmasked backend telemetry to Cloudflare Trust & Safety and upstream hosting providers.
+* **Confirmed Origin Takedown:** Origin hosting provider (InterServer) confirmed termination of the backend server instance associated with Cloudflare Report ID `bc635a6346597e48`.
+* **Custom Detection Engineering:** Authored custom YARA signatures to detect compiled OpsBridge binary strings and embedded configurations.
+
+![Origin Takedown Confirmation](assets/09-origin-takedown-confirmation.png)
