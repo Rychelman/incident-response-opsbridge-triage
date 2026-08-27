@@ -2,14 +2,15 @@
 
 ### Network Indicators
 
-| Type | Indicator | Description |
-| :--- | :--- | :--- |
-| Domain | `opsbridge.digital` | C2 Operator Panel |
-| Subdomain | `api.opsbridge.digital` | Agent C2 Beacon Endpoint |
-| Subdomain | `upload.opsbridge.digital` | Data Exfiltration Staging |
-| IP (Origin) | `69.164.245.216` | Linode Backend VPS |
-| IP (Exfiltration) | `163.245.221.212` | Staging Exfiltration Host |
-| URL (Phishing) | `https://littletonpc.org/adbrdbckup/adobedocument.html` | Compromised Delivery Lure |
+| Type | Indicator | Description | Status |
+| :--- | :--- | :--- | :--- |
+| Domain | `opsbridge.digital` | C2 Operator Panel | Suspended / Routing Disabled |
+| Subdomain | `api.opsbridge.digital` | Agent C2 Beacon Endpoint | Neutralized |
+| Subdomain | `upload.opsbridge.digital` | Data Exfiltration Staging | Neutralized |
+| IP (Origin) | `69.164.245.216` | Linode Backend VPS (Historical) | Reported |
+| IP (Exfiltration) | `163.245.221.212` | Staging Exfiltration Host | Reported |
+| Origin Host | `InterServer Backend Server` | Live C2 Origin Server | **Terminated / Neutralized** |
+| URL (Phishing) | `https://littletonpc.org/adbrdbckup/adobedocument.html` | Compromised Delivery Lure | Inactive |
 
 ### File Hashes
 
